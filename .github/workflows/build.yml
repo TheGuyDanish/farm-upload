@@ -9,12 +9,31 @@ on:
       - '*'
 
 jobs:
+  create_release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+
   build:
+    name: Build Release
+    needs: create_release
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
+        include:
+          - os: ubuntu-latest
+            release-suffix: linux
+          - os: macos-latest
+            release-suffix: mac
+          - os: windows-latest
+            release-suffix: windows
 
     steps:
     - uses: actions/checkout@v4
@@ -23,16 +42,9 @@ jobs:
         python-version: 3.11
 
     - run: pip install pyinstaller pillow
-    - run: pyinstaller -w -F --distpath ./dist/${{ runner.os }} -i src/icon.icns -n FarmUpload-${{ runner.os }} src/FarmUpload.py
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
+    - run: pyinstaller -w -F --distpath ./dist/${{ matrix.release_suffix }} -i src/icon.icns src/FarmUpload.py
+    - run: zip -j -r FarmUpload-${{ matrix.release_suffix }}.zip dist/${{ matrix.release_suffix }}/*
     - uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: |
-          dist/Linux/FarmUpload-Linux
-          dist/Windows/FarmUpload-Windows.exe
-          dist/macOS/FarmUpload-macOS.app
+        tag_name: ${{ needs.create_release.outputs.tag-name }}
+        files: FarmUpload-${{ matrix.release_suffix }}.zip
