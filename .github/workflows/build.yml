@@ -23,7 +23,7 @@ jobs:
         python-version: 3.11
 
     - run: pip install pyinstaller
-    - run: pyinstaller --noconsole --onefile --distpath ./dist/{{ runner.os }} src/FarmUpload.py
+    - run: pyinstaller --noconsole --onefile --distpath ./dist/${{ runner.os }} src/FarmUpload.py
     #- uses: actions/upload-artifact@v4
     #  with:
     #    path: dist/*
