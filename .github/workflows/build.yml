@@ -27,13 +27,6 @@ jobs:
       fail-fast: false
       matrix:
         os: ['windows-latest', 'ubuntu-latest', 'macos-latest']
-        include:
-          - os: ubuntu-latest
-            release-suffix: linux
-          - os: macos-latest
-            release-suffix: mac
-          - os: windows-latest
-            release-suffix: windows
 
     steps:
     - uses: actions/checkout@v4
@@ -42,9 +35,12 @@ jobs:
         python-version: 3.11
 
     - run: pip install pyinstaller pillow
-    - run: pyinstaller -w -F --distpath ./dist/${{ matrix.release_suffix }} -i src/icon.icns src/FarmUpload.py
-    - run: zip -j -r FarmUpload-${{ matrix.release_suffix }}.zip dist/${{ matrix.release_suffix }}/*
+    - run: pyinstaller -w -F --distpath ./dist/${{ runner.os }} -i src/icon.icns src/FarmUpload.py
+    - run: zip -r FarmUpload-${{ runner.os }}.zip dist/${{ runner.os }}/*
+      if: ${{ runner.os }} == "Linux" || "macOS"
+    - run: powershell Compress-Archive -Path dist/${{ runner.os }}/* -DestinationPath FarmUpload-${{ runner.os }}.zip
+      if: ${{ runner.os }} == "Windows"
     - uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ needs.create_release.outputs.tag-name }}
-        files: FarmUpload-${{ matrix.release_suffix }}.zip
+        files: FarmUpload-${{ runner.os }}.zip
