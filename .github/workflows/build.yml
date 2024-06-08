@@ -22,7 +22,7 @@ jobs:
       with:
         python-version: 3.11
 
-    - run: pip install pyinstaller
+    - run: pip install pyinstaller pillow
     - run: pyinstaller -w -F --distpath ./dist/${{ runner.os }} -i src/icon.icns -n FarmUpload-${{ runner.os }} src/FarmUpload.py
 
   release:
